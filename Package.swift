@@ -7,7 +7,7 @@ let package = Package(
 
   name: "macos-toolchain-finder",
   platforms: [
-    .macOS(.v10_15)
+    .macOS(.v15)
   ],
 
   products: [

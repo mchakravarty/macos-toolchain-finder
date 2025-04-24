@@ -24,15 +24,25 @@ struct MacosToolchainFinder: AsyncParsableCommand {
 extension MacosToolchainFinder {
 
   func run() async throws {
-    let toolchainFinder = MacosToolchainFinder()
 
-    switch language {
-    case .agda:
-      print("Agda")
-    case .haskell:
-      print("Haskell")
-    case .swift:
-      print("Swift")
+    do {
+
+      let configurations: [ToolConfiguration] = switch language {
+                                                  case .agda:
+                                                    []
+                                                  case .haskell:
+                                                    []
+                                                  case .swift:
+                                                    try await findSwift()
+                                                  }
+      if let json = try? JSONEncoder().encode(configurations) {
+        print(String(data: json, encoding: .utf8) ?? "")
+      } else {
+        throw FatalError.couldNotConvertToJSON
+      }
+
+    } catch let err {
+      print("Error: \(err)")
     }
   }
 }
