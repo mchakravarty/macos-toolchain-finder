@@ -8,7 +8,7 @@
 import Foundation
 
 
-struct ToolConfiguration: Encodable {
+struct ToolConfiguration: Encodable, Equatable, Hashable {
   let languageServerPath: URL
   let compilerPath:       URL
   let version:            String

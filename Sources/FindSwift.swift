@@ -36,14 +36,14 @@ func xcodeSelectInstall() throws {
 func findSwift() throws -> [ToolConfiguration] {
 
   try xcodeSelectInstall()
-  if let version = try version(of: swiftcPath,
-                               arguments: [swiftcVersionArg],
-                               matching: versionRegexpWithPrefix)
+  if let (_, version) = try version(of: swiftcPath,
+                                    arguments: [swiftcVersionArg],
+                                    matching: versionRegexpWithPrefix)
   {
 
     let configuration = ToolConfiguration(languageServerPath: sourcekitLspPath,
                                           compilerPath: swiftcPath,
-                                          version: version)
+                                          version: String(version))
     return [configuration]
 
   } else { return [] }

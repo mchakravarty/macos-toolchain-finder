@@ -38,9 +38,9 @@ let versionRegexpWithPrefix = Regex {
 ///   - arguments: The arguments to pass for the tool to print its version.
 ///   - matching: The regex to match the output for the version.
 /// - Throws: Throws fatal errors.
-/// - Returns: Returns the matched version or `nil` if matching was not successful.
+/// - Returns: Returns the match output or `nil` if matching was not successful.
 ///
-func version(of toolPath: URL, arguments: [String], matching: Regex<(Substring, Substring)>) throws -> String? {
+func version<Output>(of toolPath: URL, arguments: [String], matching: Regex<Output>) throws -> Output? {
 
   let process = Process(),
       output  = Pipe()
@@ -50,11 +50,11 @@ func version(of toolPath: URL, arguments: [String], matching: Regex<(Substring, 
   try process.run()
   process.waitUntilExit()
 
-  if let data    = try output.fileHandleForReading.readToEnd(),
-     let string  = String(data: data, encoding: .utf8),
-     let version = try matching.firstMatch(in: string)?.output.1
+  if let data   = try output.fileHandleForReading.readToEnd(),
+     let string = String(data: data, encoding: .utf8),
+     let output = try matching.firstMatch(in: string)?.output
   {
-    return String(version)
+    return output
   } else {
     return nil
   }

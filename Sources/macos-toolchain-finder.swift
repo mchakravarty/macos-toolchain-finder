@@ -31,7 +31,7 @@ extension MacosToolchainFinder {
                                                   case .agda:
                                                     []
                                                   case .haskell:
-                                                    []
+                                                    try await findHaskell()
                                                   case .swift:
                                                     try await findSwift()
                                                   }
