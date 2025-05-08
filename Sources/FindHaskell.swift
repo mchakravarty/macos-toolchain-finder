@@ -79,7 +79,7 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
 
             return ToolConfiguration(languageServerPath: url,
                                      compilerPath: ghcUrl,
-                                     toolPath: URL(filePath: homebrewPrefix),
+                                     toolPath: URL(filePath: homebrewPrefix).appending(component: "bin"),
                                      version: "\(hlsVersion)-\(ghcVersion)")
 
           } else { return nil }
