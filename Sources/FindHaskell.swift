@@ -9,8 +9,9 @@ import Foundation
 import RegexBuilder
 
 
+private let homebrewPrefix            = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"] ?? "/opt/homebrew"
 private let bashPath                  = URL(fileURLWithPath: "/bin/bash", isDirectory: false)
-private let homebrewPath              = URL(fileURLWithPath: "/opt/homebrew/bin/brew", isDirectory: false)
+private let homebrewPath              = URL(fileURLWithPath: "\(homebrewPrefix)/bin/brew", isDirectory: false)
 private let ghcName                   = "ghc"
 private let haskellLanguageServerName = "haskell-language-server"
 
@@ -40,10 +41,12 @@ func findHaskell() throws -> [ToolConfiguration] {
 func findHaskellHomebrew() throws -> [ToolConfiguration] {
 
   func ghcInstallations(for package: String) throws -> [(String, URL)] {
+
     // We should be able to query Homebrew for the paths like this:
     //    return try query(managerPath: homebrewPath, arguments: ["list", package]) { line in
     // But Ruby doesn't like our invocations. Hence, we use 'ls'.
-    return try query(managerPath: bashPath, arguments: ["-c", "/bin/ls /opt/homebrew/Cellar/\(package)/*/bin/\(ghcName)"]) { line in
+    return try query(managerPath: bashPath,
+                     arguments: ["-c", "/bin/ls \(homebrewPrefix)/Cellar/\(package)/*/bin/\(ghcName)"]) { line in
 
       // NB: We match for 'ghc' (without version number) for the executable path as we need an executable that HLS will
       //     pick up. We also don't want to resolve links for that reason.
@@ -60,8 +63,10 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
   }
 
   func configurations(for package: String, using ghcs: [(String, URL)]) throws -> [ToolConfiguration] {
+
     // Same Homebrew/Ruby problem as in 'ghcInstallations(for:)'.
-    return try query(managerPath: bashPath, arguments: ["-c", "/bin/ls /opt/homebrew/Cellar/\(package)/*/bin/\(haskellLanguageServerName)-*", package]) { line in
+    return try query(managerPath: bashPath,
+                     arguments: ["-c", "/bin/ls \(homebrewPrefix)/Cellar/\(package)/*/bin/\(haskellLanguageServerName)-*", package]) { line in
 
       // NB: Some entries may be symbolic links. By resolving them, we may get duplicates, but duplicate configurations
       //     are removed anyways at the end of the process.
@@ -74,6 +79,7 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
 
             return ToolConfiguration(languageServerPath: url,
                                      compilerPath: ghcUrl,
+                                     toolPath: URL(filePath: homebrewPrefix),
                                      version: "\(hlsVersion)-\(ghcVersion)")
 
           } else { return nil }

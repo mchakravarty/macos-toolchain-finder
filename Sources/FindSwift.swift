@@ -11,6 +11,7 @@ import Foundation
 private let xcodeSelectPath  = URL(fileURLWithPath: "/usr/bin/xcode-select")
 private let sourcekitLspPath = URL(fileURLWithPath: "/usr/bin/sourcekit-lsp")
 private let swiftcPath       = URL(fileURLWithPath: "/usr/bin/swiftc")
+private let toolPath         = URL(fileURLWithPath: "/usr/bin")
 private let swiftcVersionArg = "--version"
 
 /// Always start with 'xcode-select --install'. It'll prompt the user to install the command lines tools if that has not
@@ -43,6 +44,7 @@ func findSwift() throws -> [ToolConfiguration] {
 
     let configuration = ToolConfiguration(languageServerPath: sourcekitLspPath,
                                           compilerPath: swiftcPath,
+                                          toolPath: toolPath,
                                           version: String(version))
     return [configuration]
 

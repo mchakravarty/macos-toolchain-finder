@@ -11,6 +11,7 @@ import Foundation
 struct ToolConfiguration: Encodable, Equatable, Hashable {
   let languageServerPath: URL
   let compilerPath:       URL
+  let toolPath:           URL
   let version:            String
 }
 
