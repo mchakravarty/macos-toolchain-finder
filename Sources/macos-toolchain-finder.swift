@@ -29,7 +29,7 @@ extension MacosToolchainFinder {
 
       let configurations: [ToolConfiguration] = switch language {
                                                   case .agda:
-                                                    []
+                                                    try await findAgda()
                                                   case .haskell:
                                                     try await findHaskell()
                                                   case .swift:
