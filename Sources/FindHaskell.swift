@@ -10,10 +10,12 @@ import RegexBuilder
 
 
 private let homebrewPrefix            = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"] ?? "/opt/homebrew"
+private let whichPath                 = URL(fileURLWithPath: "/usr/bin/which")
 private let bashPath                  = URL(fileURLWithPath: "/bin/bash", isDirectory: false)
 private let homebrewPath              = URL(fileURLWithPath: "\(homebrewPrefix)/bin/brew", isDirectory: false)
 private let ghcName                   = "ghc"
 private let haskellLanguageServerName = "haskell-language-server"
+private let ghcUpName                 = "ghcup"
 
 @MainActor
 private let hlsConfigRegexp = Regex {
@@ -102,6 +104,56 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
   return Array(Set(try haskellLanguageServers.flatMap{ try configurations(for: $0, using: ghcVersions) }))
 }
 
+@MainActor
 func findHaskellGHCup() throws -> [ToolConfiguration] {
-  return []
+  if let ghcUpPath = try query(managerPath: whichPath, arguments: [ghcUpName], processLine: { $0 })
+                       .map({ URL(filePath: $0) })
+                       .first
+  {
+
+    func ghcInstallations(for version: String) throws -> [(String, URL)] {
+      return try query(managerPath: ghcUpPath, arguments: ["whereis", "ghc", version]) { (version, URL(filePath: $0)) }
+    }
+
+    func configurations(for hlsVersion: String, using ghcs: [(String, URL)]) throws -> [ToolConfiguration] {
+
+      // 'ghcup whereis hls' gives us the path of the 'haskell-language-server-wrapper' without any indication of the
+      // supported GHC versions. However, 'haskell-language-server-<ghc-version>' executables are located in the same
+      // directory; hence, we enumerate those.
+      let nestedResults = try query(managerPath: ghcUpPath, arguments: ["whereis", "hls", hlsVersion]) { wrapperPath in
+        let hlsExecutableDirectory = URL(fileURLWithPath: wrapperPath).deletingLastPathComponent(),
+            files                  = try FileManager.default.contentsOfDirectory(at: hlsExecutableDirectory,
+                                                                                 includingPropertiesForKeys: nil)
+        return files.compactMap { url in
+          if let (_, ghcVersion) = url.lastPathComponent.firstMatch(of: Capture{ versionRegexp })?.output {
+
+            if let ghcUrl = ghcs.first(where: { $0.0 == ghcVersion })?.1 {
+
+              return ToolConfiguration(languageServerPath: url,
+                                       compilerPath: ghcUrl,
+                                       toolPath: URL(filePath: homebrewPrefix).appending(component: "bin"),
+                                       version: "\(hlsVersion)-\(ghcVersion)")
+
+            } else { return nil }
+
+          } else { return nil }
+        }
+      }
+      return Array(nestedResults.joined())
+    }
+
+    let hlsArguments                  = ["list", "--tool=hls", "--show-criteria=installed", "--raw-format"],
+        haskellLanguageServerVersions = try query(managerPath: ghcUpPath, arguments: hlsArguments) { line in
+          if let (_, version) = try versionRegexpWithPrefix.firstMatch(in: line)?.output { String(version) } else { nil }
+        }
+
+    let ghcArguments = ["list", "--tool=ghc", "--show-criteria=installed", "--raw-format"],
+        ghcVersions  = try query(managerPath: ghcUpPath, arguments: ghcArguments) { line in
+          if let (_, version) = try versionRegexpWithPrefix.firstMatch(in: line)?.output { String(version) } else { nil }
+        },
+        ghcInstallations = try ghcVersions.map(ghcInstallations(for:)).joined()
+
+    return try haskellLanguageServerVersions.flatMap{ try configurations(for: $0, using: Array(ghcInstallations)) }
+
+  } else { return [] }
 }
