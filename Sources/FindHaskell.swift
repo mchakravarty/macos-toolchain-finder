@@ -112,7 +112,9 @@ func findHaskellGHCup() throws -> [ToolConfiguration] {
   {
 
     func ghcInstallations(for version: String) throws -> [(String, URL)] {
-      return try query(managerPath: ghcUpPath, arguments: ["whereis", "ghc", version]) { (version, URL(filePath: $0)) }
+      return try query(managerPath: ghcUpPath, arguments: ["--offline", "whereis", "ghc", version]) {
+        (version, URL(filePath: $0))
+      }
     }
 
     func configurations(for hlsVersion: String, using ghcs: [(String, URL)]) throws -> [ToolConfiguration] {
@@ -120,7 +122,7 @@ func findHaskellGHCup() throws -> [ToolConfiguration] {
       // 'ghcup whereis hls' gives us the path of the 'haskell-language-server-wrapper' without any indication of the
       // supported GHC versions. However, 'haskell-language-server-<ghc-version>' executables are located in the same
       // directory; hence, we enumerate those.
-      let nestedResults = try query(managerPath: ghcUpPath, arguments: ["whereis", "hls", hlsVersion]) { wrapperPath in
+      let nestedResults = try query(managerPath: ghcUpPath, arguments: ["--offline", "whereis", "hls", hlsVersion]) { wrapperPath in
         let hlsExecutableDirectory = URL(fileURLWithPath: wrapperPath).deletingLastPathComponent(),
             files                  = try FileManager.default.contentsOfDirectory(at: hlsExecutableDirectory,
                                                                                  includingPropertiesForKeys: nil)
@@ -142,12 +144,12 @@ func findHaskellGHCup() throws -> [ToolConfiguration] {
       return Array(nestedResults.joined())
     }
 
-    let hlsArguments                  = ["list", "--tool=hls", "--show-criteria=installed", "--raw-format"],
+    let hlsArguments                  = ["--offline", "list", "--tool=hls", "--show-criteria=installed", "--raw-format"],
         haskellLanguageServerVersions = try query(managerPath: ghcUpPath, arguments: hlsArguments) { line in
           if let (_, version) = try versionRegexpWithPrefix.firstMatch(in: line)?.output { String(version) } else { nil }
         }
 
-    let ghcArguments = ["list", "--tool=ghc", "--show-criteria=installed", "--raw-format"],
+    let ghcArguments = ["--offline", "list", "--tool=ghc", "--show-criteria=installed", "--raw-format"],
         ghcVersions  = try query(managerPath: ghcUpPath, arguments: ghcArguments) { line in
           if let (_, version) = try versionRegexpWithPrefix.firstMatch(in: line)?.output { String(version) } else { nil }
         },
