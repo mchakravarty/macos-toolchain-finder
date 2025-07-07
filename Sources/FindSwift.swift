@@ -11,6 +11,7 @@ import Foundation
 private let xcodeSelectPath  = URL(fileURLWithPath: "/usr/bin/xcode-select")
 private let sourcekitLspPath = URL(fileURLWithPath: "/usr/bin/sourcekit-lsp")
 private let swiftcPath       = URL(fileURLWithPath: "/usr/bin/swiftc")
+private let swiftPath        = URL(fileURLWithPath: "/usr/bin/swift")
 private let toolPath         = URL(fileURLWithPath: "/usr/bin")
 private let swiftcVersionArg = "--version"
 
@@ -37,14 +38,15 @@ func xcodeSelectInstall() throws {
 func findSwift() throws -> [ToolConfiguration] {
 
   try xcodeSelectInstall()
-  if let (_, version) = try version(of: swiftcPath,
+  if let (_, version) = try version(of: swiftPath,
                                     arguments: [swiftcVersionArg],
                                     matching: versionRegexpWithPrefix)
   {
 
     let configuration = ToolConfiguration(languageServerPath: sourcekitLspPath,
                                           compilerPath: swiftcPath,
-                                          toolPath: toolPath,
+                                          packageManagerPath: swiftPath,
+                                          toolBinPath: toolPath,
                                           version: String(version))
     return [configuration]
 

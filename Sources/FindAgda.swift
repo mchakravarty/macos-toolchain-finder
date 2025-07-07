@@ -33,7 +33,8 @@ func findAgda() throws -> [ToolConfiguration] {
     
     let configuration = ToolConfiguration(languageServerPath: alsPath,
                                           compilerPath: agdaPath,
-                                          toolPath: agdaPath.deletingLastPathComponent(),
+                                          packageManagerPath: nil,
+                                          toolBinPath: agdaPath.deletingLastPathComponent(),
                                           version: String(version))
     return [configuration]
 
