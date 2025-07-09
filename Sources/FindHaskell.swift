@@ -65,8 +65,11 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
     }
   }
 
-  func configurations(for package: String, using ghcs: [(String, URL)], with cabal: URL?) throws -> [ToolConfiguration] {
-
+  func configurations(for package: String,
+                      using ghcs: [(String, URL)],
+                      with cabal: (String, URL)?)
+  throws -> [ToolConfiguration]
+  {
     // Same Homebrew/Ruby problem as in 'ghcInstallations(for:)'.
     return try query(managerPath: bashPath,
                      arguments: ["-c", "/bin/ls \(homebrewPrefix)/Cellar/\(package)/*/bin/\(haskellLanguageServerName)-*", package]) { line in
@@ -82,9 +85,10 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
 
             return ToolConfiguration(languageServerPath: url,
                                      compilerPath: ghcUrl,
-                                     packageManagerPath: cabal,
+                                     packageManagerPath: cabal?.1,
                                      toolBinPath: URL(filePath: homebrewPrefix).appending(component: "bin"),
-                                     version: "\(hlsVersion)-\(ghcVersion)")
+                                     version: "\(hlsVersion)-\(ghcVersion)",
+                                     packageManagerVersion: cabal?.0)
 
           } else { return nil }
 
@@ -110,7 +114,7 @@ func findHaskellHomebrew() throws -> [ToolConfiguration] {
   // Deduplicate all configurations from the found HLS packages.
   return Array(Set(try haskellLanguageServers.flatMap{ try configurations(for: $0,
                                                                           using: ghcVersions,
-                                                                          with: cabalVersions.last?.1) }))
+                                                                          with: cabalVersions.last) }))
 }
 
 @MainActor
@@ -143,8 +147,11 @@ func findHaskellGHCup() throws -> [ToolConfiguration] {
       }
     }
 
-    func configurations(for hlsVersion: String, using ghcs: [(String, URL)], with cabal: URL?) throws -> [ToolConfiguration] {
-
+    func configurations(for hlsVersion: String,
+                        using ghcs: [(String, URL)],
+                        with cabal: (String, URL)?)
+    throws -> [ToolConfiguration]
+    {
       // 'ghcup whereis hls' gives us the path of the 'haskell-language-server-wrapper' without any indication of the
       // supported GHC versions. However, 'haskell-language-server-<ghc-version>' executables are located in the same
       // directory; hence, we enumerate those.
@@ -159,9 +166,9 @@ func findHaskellGHCup() throws -> [ToolConfiguration] {
 
               return ToolConfiguration(languageServerPath: url,
                                        compilerPath: ghcUrl,
-                                       packageManagerPath: cabal,
+                                       packageManagerPath: cabal?.1,
                                        toolBinPath: URL(filePath: homebrewPrefix).appending(component: "bin"),
-                                       version: "\(hlsVersion)-\(ghcVersion)")
+                                       version: "\(hlsVersion)-\(ghcVersion)", packageManagerVersion: cabal?.0)
 
             } else { return nil }
 
@@ -197,7 +204,7 @@ func findHaskellGHCup() throws -> [ToolConfiguration] {
 
     return try haskellLanguageServerVersions.flatMap{ try configurations(for: $0,
                                                                          using: Array(ghcInstallations),
-                                                                         with: cabalInstallations?.first?.1 )}
+                                                                         with: cabalInstallations?.first )}
 
   } else { return [] }
 }

@@ -9,26 +9,30 @@ import Foundation
 
 
 struct ToolConfiguration: Encodable, Equatable, Hashable {
-  
+
   /// The path to the executable of the language server.
   ///
   let languageServerPath: URL
-  
+
   /// The path of the executable of the matching compiler.
   ///
   let compilerPath: URL
-  
+
   /// The (optional) path of matching package manager.
-  /// 
+  ///
   let packageManagerPath: URL?
 
   /// The path where tool executable reside, which should be part of the PATH when invoking the language server.
   ///
   let toolBinPath: URL
-  
+
   /// The version of the language server.
   ///
   let version: String
+
+  /// The version of the package manager if not the same as the tool..
+  ///
+  let packageManagerVersion: String?
 }
 
 enum FatalError: Error {

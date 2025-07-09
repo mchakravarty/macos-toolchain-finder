@@ -47,7 +47,8 @@ func findSwift() throws -> [ToolConfiguration] {
                                           compilerPath: swiftcPath,
                                           packageManagerPath: swiftPath,
                                           toolBinPath: toolPath,
-                                          version: String(version))
+                                          version: String(version),
+                                          packageManagerVersion: nil)
     return [configuration]
 
   } else { return [] }

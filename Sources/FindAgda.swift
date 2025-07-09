@@ -35,7 +35,8 @@ func findAgda() throws -> [ToolConfiguration] {
                                           compilerPath: agdaPath,
                                           packageManagerPath: nil,
                                           toolBinPath: agdaPath.deletingLastPathComponent(),
-                                          version: String(version))
+                                          version: String(version),
+                                          packageManagerVersion: nil)
     return [configuration]
 
   } else { return [] }
